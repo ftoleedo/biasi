@@ -95,6 +95,10 @@ Each of these environment variables turns off one optimization:
 | `GGML_CUDA_HC_RES16=0` | f32 hyper-connection residual instead of f16 |
 | `GGML_CUDA_CONV_QKN_RAW=1` | GDN conv writes the raw q/k channels again |
 | `LLAMA_HEAD_2STAGE=0` | full LM head every token |
+| `GGML_HIP_GDN_FORM=wy` | previous Gated DeltaNet prefill path (outputs identical to release 20261009 for that part) |
+| `GGML_CUDA_MOE_DN_BM=64` | previous MoE down-projection tiles |
+| `GGML_CUDA_TOPK_QSA_TAIL=0` | QSA top-k without the padded-batch fix |
+| `LLAMA_SRV_WAIT_SLOT_MIN=0` | a re-sent request no longer waits for the slot that holds its conversation |
 
 ## Files
 
