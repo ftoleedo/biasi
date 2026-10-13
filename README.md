@@ -4,10 +4,9 @@ Prebuilt binaries (see **Releases**) of **Biasi-ROCm**, a llama.cpp fork tuned f
 
 It runs the usual `llama-server` / `llama-bench` / `llama-perplexity`. The prefill and decode paths of the models below use custom kernels: MoE experts on WMMA, sparse attention (QSA), Gated DeltaNet, hyper-connections, fused norms, and an MTP speculative decoding path.
 
-### Latest numbers (2026-10-12, build `0f85dd90d`, not yet in Releases)
+### Latest numbers (2026-10-12, build `0f85dd90d`, release 20261013)
 
-These come from the build we run in production today, which is newer than the last release (`20261009`) and not yet
-packaged as one. ASUS ProArt PX13 (Ryzen AI Max+ 395, Radeon 8060S, 128 GB), AC power, performance profile, server warm.
+These come from the build we run in production, published as release `biasi-rocm-gfx1151-20261013`. ASUS ProArt PX13 (Ryzen AI Max+ 395, Radeon 8060S, 128 GB), AC power, performance profile, server warm.
 
 **Several conversations at once** (Qwen3.8-Flash-Next UD-IQ4_XS, 8 slots, MTP; distinct ~3.5–4.5K-token prompts, 300
 tokens written each, all conversations start together; every engine measured in the same session, one at a time):
@@ -65,8 +64,8 @@ These were measured on an ASUS ProArt PX13 (128 GB) on AC power, performance pro
 ## Usage
 
 ```bash
-# download biasi-rocm-gfx1151-20261009.tar.gz from Releases (check it against SHA256SUMS), then:
-tar xf biasi-rocm-gfx1151-20261009.tar.gz && cd biasi-rocm-gfx1151-20261009
+# download biasi-rocm-gfx1151-20261013.tar.gz from Releases (check it against SHA256SUMS), then:
+tar xf biasi-rocm-gfx1151-20261013.tar.gz && cd biasi-rocm-gfx1151-20261013
 ./biasi-server.sh --version
 
 # one model, OpenAI-compatible server
