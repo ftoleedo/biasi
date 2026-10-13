@@ -4,6 +4,49 @@ Prebuilt binaries (see **Releases**) of **Biasi-ROCm**, a llama.cpp fork tuned f
 
 It runs the usual `llama-server` / `llama-bench` / `llama-perplexity`. The prefill and decode paths of the models below use custom kernels: MoE experts on WMMA, sparse attention (QSA), Gated DeltaNet, hyper-connections, fused norms, and an MTP speculative decoding path.
 
+### Latest numbers (2026-10-12, build `0f85dd90d`, not yet in Releases)
+
+These come from the build we run in production today, which is newer than the last release (`20261009`) and not yet
+packaged as one. ASUS ProArt PX13 (Ryzen AI Max+ 395, Radeon 8060S, 128 GB), AC power, performance profile, server warm.
+
+**Several conversations at once** (Qwen3.8-Flash-Next UD-IQ4_XS, 8 slots, MTP; distinct ~3.5–4.5K-token prompts, 300
+tokens written each, all conversations start together; every engine measured in the same session, one at a time):
+
+| Engine | Writing, 1 conv. | 3 at once | 8 at once | Reading prompts, 1 conv. | Reading, 8 at once |
+|---|---:|---:|---:|---:|---:|
+| **Biasi-ROCm** | **52.5** | **76.5** | **105.2** | 1,307 | 1,114 |
+| gufo v0.11.0 (UD-Q4_K_XL) | 31.8 | 70.6 | 103.7 | 1,328 | 989 |
+| halogen 0.16.4 | 36.7 | 53.6 | 82.5 | 1,358 | 1,356 |
+| strata v0.1.43 | 49.2 | 70.7 | 75.7 | 1,088 | 838 |
+| llama.cpp ROCm (upstream) | 20.4 | 35.3 | 41.3 | 384 | 274 |
+
+Writing = tokens/s summed over all conversations, counted in real time while all of them are writing. Reading = prompt
+tokens ÷ time until the last conversation gets its first token (queueing included). halogen reads prompts one after
+another and turns MTP off with more than one request.
+
+**One long prompt, Flash-Next:**
+
+| Test | tok/s |
+|---|---:|
+| Server, one ~34K-token prompt (MTP on) | 1,528 |
+| Server, 19K-token prompt (production check) | 1,420–1,500 |
+| `llama-bench` pp4096 / pp16384 (no draft head) | 1,676 / 1,590 |
+| Writing, short prompt, MTP draft 3 | 61–63 |
+
+**What changed since the 20261009 release** (prompt reading, Flash-Next): scheduler no longer rebuilt on every request
+(2.5–3× on a 4K prompt with 8 slots), QSA top-k on unaligned batches, hyper-connection down-projection, MoE tiles,
+Gated DeltaNet "Y" form, prompt-table prefetch, and a fix for re-sent requests (they now wait for the slot that already
+holds the conversation instead of re-reading it). Prompt reading with one conversation went from 963 to 1,307 tok/s
+on the ruler above; writing speed is unchanged. The Gated DeltaNet change alters long outputs slightly (paired
+perplexity on wikitext not significantly different, KL 1.06× of the previous path; `GGML_HIP_GDN_FORM=wy` restores the
+old path).
+
+We publish the same-session, real-use ruler on purpose: measured "headline style" (repetitive text, each request's own
+speed summed, prompts read before timing starts), the same build shows 79 tok/s with one conversation and 223 with
+eight.
+
+### Release 20261009 (build `4b950e621`)
+
 | Model | Prefill (tok/s) | Decode | Decode with MTP |
 |---|---:|---:|---:|
 | Qwen3.8-Flash-Next (unsloth UD-IQ4_XS), ~8.5K prompt | 1602 | 29.7 | 50.5 |
@@ -66,4 +109,4 @@ Each of these environment variables turns off one optimization:
 
 ## License and disclaimer
 
-Biasi-ROCm is a derivative of [llama.cpp](https://github.com/ggml-org/llama.cpp), MIT License (see `LICENSE`). Binaries are provided as-is, without warranty. This is not affiliated with AMD, ggml.ai or halogen. ROCm is not included.
+Biasi-ROCm is a derivative of [llama.cpp](https://github.com/ggml-org/llama.cpp), MIT License (see `LICENSE`). Binaries are provided as-is, without warranty. This is not affiliated with AMD, ggml.ai, halogen, gufo or strata. ROCm is not included.
